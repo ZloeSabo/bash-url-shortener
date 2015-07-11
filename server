@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+
+#shopt -s extglob
+
+recv() { echo "< $@" >&2; }
+send() { echo "> $@" >&2;
+         printf '%s\r\n' "$*"; }
+
+NOW=$(date +"%a, %d %b %Y %H:%M:%S %Z")
+declare -a RESPONSE_HEADERS=(
+    "Date: $NOW"
+)
+
+declare -a RESPONSE_CODES=(
+    [200]="OK"
+    [400]="Bad Request"
+    [500]="Internal server error"
+)
+
+set_response_header() {
+    RESPONSE_HEADERS+=("$1: $2")
+}
+
+response_code() {
+    RESPONSE_CODES[$1]
+}
+
+send_start_line() {
+    local description=response_code $1
+    send "HTTP 1.0 $1 $description"
+}
+
+send_headers() {
+    for i in "${RESPONSE_HEADERS[@]}"; do
+        send "$i"
+    done
+}
+
+send_body() {
+    while read -r line; do
+        send "$line"
+    done
+}
+
+send_response() {
+    send_start_line $1
+    send_headers
+    send
+    send_body
+}
+
+send_response_ok() {
+    send_response 200;
+    exit 0;
+}
+
+send_response_bad_request() {
+    send_response 400;
+    exit 1;
+}
+
+location() {
+    local definition=$1
+    shift
+    [[ $REQUEST_URI =~ $definition ]] && \
+      "$@" "${BASH_REMATCH[@]}"
+}
+
+resolve_url() {
+    echo $1
+    return "http://ya.ru"
+}
+
+increase_views() {
+    #do noting for now
+    return
+}
+
+shortener_redirect() {
+    local id=$2
+    local url=resolve_url $id
+    increase_views $id
+    set_response_header "Location" $url
+    send_response_ok
+}
+
+declare -a REQUEST_HEADERS
+declare REQUEST_BODY
+
+handle_request_start_line() {
+    read -r line
+    line=${line%%$'\r'}
+    recv "$line"
+
+    echo $line
+}
+
+handle_request_headers() {
+    while IFS=':' read -r key value; do
+        value=${value%%$'\r'}
+        key=${key%%$'\r'}
+        [ -z $key ] && break
+        #recv "Header: $key => $value"
+        REQUEST_HEADERS["$key"]="$value"
+    done
+}
+
+handle_request_body() {
+    local body_length=$1
+    read -n $1 line
+    REQUEST_BODY=$line
+}
+
+handle_request() {
+    local start_line="$(handle_request_start_line)"
+    read -r REQUEST_METHOD REQUEST_URI REQUEST_HTTP_VERSION <<< "$start_line"
+    [ -n "$REQUEST_METHOD" ] && \
+        [ -n "$REQUEST_URI" ] && \
+        [ -n "$REQUEST_HTTP_VERSION" ] \
+        || send_response_bad_request
+
+    handle_request_headers
+    local content_length=${REQUEST_HEADERS['Content-Length']}
+    [ -n "$content_length" ] && \
+        handle_request_body $content_length
+}
+
+handle_request
+
+recv "METHOD: $REQUEST_METHOD"
+recv "URI: $REQUEST_URI"
+recv "Version: $REQUEST_HTTP_VERSION"
+#recv "headers: $REQUEST_HEADERS"
+recv "Body: $REQUEST_BODY"
+#location '^/(.*)' shortener_redirect
