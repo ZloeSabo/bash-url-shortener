@@ -13,3 +13,9 @@ to_upper() {
     local uc=$(echo $1 |tr '[:lower:]' '[:upper:]')
     echo "$uc"
 }
+
+#see https://gist.github.com/cjus/1047794
+function get_json_val () {
+    local value=$(echo $2 | sed 's/\\\\\//\//g' | sed 's/[{}]//g' | awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}' | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $1)
+    echo ${value##*|}
+}

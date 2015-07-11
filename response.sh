@@ -43,8 +43,12 @@ send_response() {
 }
 
 send_response_ok() {
-    send_response 200 <<< "";
+    send_response 200;
     exit 0;
+}
+
+send_response_ok_empty() {
+    send_response_ok <<< ""
 }
 
 send_response_redirect() {
@@ -53,6 +57,6 @@ send_response_redirect() {
 }
 
 send_response_bad_request() {
-    send_response 400;
+    send_response 400 <<< "";
     exit 1;
 }

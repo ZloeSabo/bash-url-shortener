@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
 
+source "${BASH_SOURCE[0]%/*}"/helpers.sh
+source "${BASH_SOURCE[0]%/*}"/request.sh
+source "${BASH_SOURCE[0]%/*}"/response.sh
+
+#Depends: bash, tr
+
 location() {
     local definition=$1
     shift
     [[ $REQUEST_URI =~ $definition ]] && \
       "$@" "${BASH_REMATCH[@]}"
+}
+
+post() {
+    [[ $REQUEST_METHOD == 'POST' ]] && location "$@"
+}
+
+get() {
+    [[ $REQUEST_METHOD == 'GET' ]] && location "$@"
 }
 
 resolve_url() {
@@ -25,9 +39,14 @@ shortener_redirect() {
     send_response_redirect
 }
 
-source "${BASH_SOURCE[0]%/*}"/helpers.sh
-source "${BASH_SOURCE[0]%/*}"/request.sh
-source "${BASH_SOURCE[0]%/*}"/response.sh
+shorten_url() {
+    local url=$(get_json_val "url" $REQUEST_BODY)
+    [ -n "$url" ] || \
+        send_response_bad_request
+    recv "Shorten url: $url"
+    send_response_ok <<< ""
+}
+
 
 handle_request
 
@@ -36,4 +55,6 @@ recv "URI: $REQUEST_URI"
 recv "Version: $REQUEST_HTTP_VERSION"
 #recv "headers: $REQUEST_HEADERS"
 recv "Body: $REQUEST_BODY"
-location '^/(.*)' shortener_redirect
+
+post '^/(.*)' shorten_url
+get '^/(.*)' shortener_redirect
