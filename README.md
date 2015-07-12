@@ -8,9 +8,11 @@ To run this you need to install socat. Then:
 
 ### Add url
 To add url you need to pass json like that:
+
     curl -H "Content-Type: application/json" -X POST -d '{"url":"http://google.com"}' server:port
 
 The output will be
+
     {"url":"://server:port/code"}
 
 ### Use redirecting
