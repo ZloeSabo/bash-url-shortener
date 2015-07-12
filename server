@@ -25,7 +25,7 @@ get() {
 shortener_redirect() {
     local id=$2
     local url=$(resolve_url "$id")
-    recv "Redirecting to $url"
+    recv "Redirecting id: $id to $url"
     [ -n "$url" ] || \
         send_response_internal_error
 
@@ -57,4 +57,4 @@ recv "Body: $REQUEST_BODY"
 post '^/(.*)' shorten_url
 get '^/(.*)' shortener_redirect
 
-#send_response_not_found
+send_response_not_found
