@@ -29,8 +29,14 @@ increase_views() {
     return 0
 }
 
-get_shortened_count() {
-    echo $(ls -l $LINK_DIRECTORY |wc -l)
+generate_id() {
+    #ls -l gives N+1 on non empty directory
+    #so no need to increase
+    local count=$(ls -l $LINK_DIRECTORY |wc -l)
+    [ $count -lt 1 ] && \
+        count=1
+
+    echo $count
 }
 
 encode() {
@@ -41,6 +47,10 @@ encode() {
     while [[ $num -gt 0 ]]; do
         local remainder=$(($num % $base))
         local index=$((remainder-1))
+        recv "num: $num"
+        recv "base: $base"
+        recv "remainder: $remainder"
+        recv "index: $index"
         result+=${SHORTENER_CHARSET[$index]}
         num=$(($num / $base))
     done
@@ -51,8 +61,8 @@ encode() {
 shorten() {
     local subject=$1
     ensure_dirs
-    local new_link_number=$(($(get_shortened_count) + 1))
-    local shortcode=$(encode new_link_number)
+    local new_link_number=$(generate_id)
+    local shortcode=$(encode $new_link_number)
     save_url $shortcode $subject
 
     echo $shortcode
