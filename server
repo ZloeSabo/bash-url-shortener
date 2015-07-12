@@ -3,8 +3,9 @@
 source "${BASH_SOURCE[0]%/*}"/helpers.sh
 source "${BASH_SOURCE[0]%/*}"/request.sh
 source "${BASH_SOURCE[0]%/*}"/response.sh
+source "${BASH_SOURCE[0]%/*}"/shortener.sh
 
-#Depends: bash, tr
+#Depends: bash, tr, sed, awk, lockfile, rev
 
 location() {
     local definition=$1
@@ -21,20 +22,14 @@ get() {
     [[ $REQUEST_METHOD == 'GET' ]] && location "$@"
 }
 
-resolve_url() {
-    #echo $1
-    echo "http://ya.ru"
-}
-
-increase_views() {
-    #do noting for now
-    return 0
-}
-
 shortener_redirect() {
     local id=$2
     local url=$(resolve_url "$id")
-    increase_views $id
+    recv "Redirecting to $url"
+    [ -n "$url" ] || \
+        send_response_internal_error
+
+    #increase_views $id
     set_response_header "Location" $url
     send_response_redirect
 }
@@ -44,9 +39,12 @@ shorten_url() {
     [ -n "$url" ] || \
         send_response_bad_request
     recv "Shorten url: $url"
-    send_response_ok <<< ""
-}
 
+    local shortcode=$(do_locked shorten $url)
+    local server_url=$(server_url)
+    local newurl="://$server_url/$shortcode"
+    send_json <<< "{\"url\":\"$newurl\"}"
+}
 
 handle_request
 
@@ -58,3 +56,5 @@ recv "Body: $REQUEST_BODY"
 
 post '^/(.*)' shorten_url
 get '^/(.*)' shortener_redirect
+
+#send_response_not_found

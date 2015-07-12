@@ -19,3 +19,11 @@ function get_json_val () {
     local value=$(echo $2 | sed 's/\\\\\//\//g' | sed 's/[{}]//g' | awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}' | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $1)
     echo ${value##*|}
 }
+
+do_locked() {
+    #ITS A TRAP
+    trap "rm -rf '$LOCKFILE'" 0 2 3 15
+
+    lockfile -l1 $LOCKFILE && \
+        "$@"
+}

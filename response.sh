@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 NOW=$(date +"%a, %d %b %Y %H:%M:%S %Z")
 declare -a RESPONSE_HEADERS=(
     "Date: $NOW"
@@ -7,7 +9,8 @@ declare -a RESPONSE_HEADERS=(
 declare -a RESPONSE_CODES=(
     [200]="OK"
     [400]="Bad Request"
-    [500]="Internal server error"
+    [404]="Not Found"
+    [500]="Internal Server Error"
 )
 
 set_response_header() {
@@ -59,4 +62,19 @@ send_response_redirect() {
 send_response_bad_request() {
     send_response 400 <<< "";
     exit 1;
+}
+
+send_response_not_found() {
+    send_response 404 <<< "Not found"
+    exit 1;
+}
+
+send_response_internal_error() {
+    send_response 500 <<< "";
+    exit 1;
+}
+
+send_json() {
+    set_response_header "Content-Type" "application/json"
+    send_response_ok
 }

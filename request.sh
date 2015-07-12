@@ -1,5 +1,7 @@
-declare -a REQUEST_HEADERS
 declare REQUEST_BODY
+declare REQUEST_METHOD
+declare REQUEST_URI
+declare REQUEST_HTTP_VERSION
 
 handle_request_start_line() {
     read -r line
@@ -44,4 +46,8 @@ handle_request() {
     local content_length=${REQUEST_HEADER_CONTENT_LENGTH}
     [ -n "$content_length" ] && \
         handle_request_body $content_length
+}
+
+server_url() {
+    echo ${REQUEST_HEADER_HOST}
 }
