@@ -1,5 +1,5 @@
-recv() { echo "< $@" >&2; }
-send() { echo "> $@" >&2;
+recv() { echo "($$) < $@" >&2; }
+send() { echo "($$) > $@" >&2;
          printf '%s\r\n' "$*"; }
 
 trim() {

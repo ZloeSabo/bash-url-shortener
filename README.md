@@ -1,6 +1,9 @@
 # bash-url-shortener
 Why not use bash?
 
+### Depends
+bash, socat, tr, sed, awk, lockfile, rev
+
 ### Run
 To run this you need to install socat. Then:
 

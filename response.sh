@@ -74,7 +74,7 @@ send_response_internal_error() {
     exit 1;
 }
 
-send_json() {
+send_json_response() {
     set_response_header "Content-Type" "application/json"
     send_response_ok
 }
